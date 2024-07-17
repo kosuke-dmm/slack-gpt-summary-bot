@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  slack_bot:
+    container_name: slack-gpt-prod
+    build:
+      context: .
+      dockerfile: Dockerfile  # 本番環境用のDockerfileを指定
+    restart: always
+    env_file: 
+      - app/.env  # 本番環境の.envファイルへのパスを指定
+    volumes:
+      - ./logs:/app/logs  # ログ用のボリューム
+    command: python ./app/main.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    deploy:
+      replicas: 1  # 単一ホストでの実行のため、レプリカ数を1に変更
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
